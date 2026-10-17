@@ -43,11 +43,11 @@ def main():
         
         # Check if the generation is over
         if population.all_agents_dead():
-            print(f"Generation {population.generation} is dead. Time to evolve!")
-            # We will call our genetic algorithm here
+            print(f"Generation {population.generation} finished.")
             
-            # For now, let's just reset a new random population to see it loop
-            population = Population(maze.start_pos)
+            # Evolutionary process !
+            population.calculate_fitness_all(maze.target_rect)
+            population.natural_selection(maze.start_pos)
         
         # Swap the buffers to display the new frame
         pygame.display.flip()
