@@ -1,6 +1,6 @@
 import pygame
 import sys
-from entity import Entity
+from population import Population
 
 # Import our constants and classes
 from settings import WIDTH, HEIGHT, FPS, WHITE
@@ -20,30 +20,39 @@ def main():
     # Instantiate our environment (the maze)
     maze = Maze()
 
-    # Creation of our first entity 
-    agent = Entity(maze.start_pos)
+    # Creation of our first population 
+    population = Population(maze.start_pos)
 
     # Main application loop
     running = True
     while running:
-        # 1. Event handling (inputs, window closing)
+        # Event handling (inputs, window closing)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
         
-        # 2. Clear the screen for the new frame
+        # Clear the screen for the new frame
         screen.fill(WHITE)
         
-        # 3. Render the environment (walls, start, target)
+        # Render the environment (walls, start, target)
         maze.draw(screen)
 
-        agent.update(maze)
-        agent.draw(screen)
+        # Update and draw the population
+        population.update(maze)
+        population.draw(screen)
         
-        # 4. Swap the buffers to display the new frame
+        # Check if the generation is over
+        if population.all_agents_dead():
+            print(f"Generation {population.generation} is dead. Time to evolve!")
+            # We will call our genetic algorithm here
+            
+            # For now, let's just reset a new random population to see it loop
+            population = Population(maze.start_pos)
+        
+        # Swap the buffers to display the new frame
         pygame.display.flip()
         
-        # 5. Control the framerate
+        # Control the framerate
         clock.tick(FPS)
 
         
