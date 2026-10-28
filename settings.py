@@ -10,14 +10,16 @@ BLUE = (0, 0, 255)   # For the departure
 YELLOW = (255, 255, 0) # Color for our checkpoints
 
 RED = (255, 0, 0)   # For the entity
-LIFESPAN = 400       # max number of instractions (step) per entity 
+LIFESPAN = 1500       # max number of instractions (step) per entity 
 ENTITY_RADIUS = 4    # Size of our point
 MAX_SPEED = 4        # Maximum speed to prevent it from passing through walls (glitch)
 
-POPULATION_SIZE = 150  # Number of entities in our swarm
+POPULATION_SIZE = 250  # Number of entities in our swarm
 
 MUTATION_RATE = 0.01 # 1% chance for a gene to mutate
 
-CYCLES_PER_FRAME = 50 # Increase this to speed up simulation time (e.g., 10 or 50)
+CYCLES_PER_FRAME = 10 # Increase this to speed up simulation time (e.g., 10 or 50)
 
 YELLOW = (255, 255, 0) # Color for our checkpoints
+
+RENDER_EVERY_N_GEN = 10  # The display will only render every 5 generations to speed up training

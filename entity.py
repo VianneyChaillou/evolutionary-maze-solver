@@ -152,6 +152,3 @@ class Entity:
             
         if self.reached_target:
             self.fitness *= 1000
-            
-        if self.dead and not self.reached_target:
-            self.fitness /= 2

@@ -42,36 +42,6 @@ class Population:
         # If the loop finishes, everyone is dead or at the target
         return True
 
-    def calculate_fitness(self, maze):
-        """
-        Calculates fitness based on how many checkpoints were reached, 
-        and the distance to the CURRENT objective.
-        """
-        # Massive base score for each checkpoint reached (ensures they never regress)
-        self.fitness = self.checkpoint_index * 1000  
-        
-        # Determine the next objective (the next checkpoint, or the final target)
-        if self.checkpoint_index < len(maze.checkpoints):
-            objective = maze.checkpoints[self.checkpoint_index]
-        else:
-            objective = maze.target_rect
-
-        if objective:
-            dx = self.pos.x - objective.centerx
-            dy = self.pos.y - objective.centery
-            distance = math.sqrt(dx**2 + dy**2)
-            
-            if distance == 0:
-                distance = 1
-                
-            self.fitness += 100.0 / distance
-            
-        if self.reached_target:
-            self.fitness *= 1000
-            
-        if self.dead and not self.reached_target:
-            self.fitness /= 2
-
     def calculate_fitness_all(self, maze):
         """
         Calls the fitness calculation for every agent in the population.

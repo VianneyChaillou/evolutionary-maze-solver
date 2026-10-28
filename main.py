@@ -1,75 +1,94 @@
 import pygame
 import sys
+from entity import Entity
 from population import Population
-
-# Import our constants and classes
-from settings import WIDTH, HEIGHT, FPS, WHITE, CYCLES_PER_FRAME
 from environment import Maze
 
+# Make sure all these are in your settings.py
+from settings import WIDTH, HEIGHT, FPS, WHITE, CYCLES_PER_FRAME, RENDER_EVERY_N_GEN
+
 def main():
-    # Initialize all imported Pygame modules
     pygame.init()
-    
-    # Set up the display surface
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Evolutionary AI Maze Solver")
-    
-    # Set up the clock to control the framerate
     clock = pygame.time.Clock()
-    
-    # Instantiate our environment (the maze)
     maze = Maze()
-
-    # Creation of our first population 
+    
     population = Population(maze.start_pos)
-
-    # Main application loop
+    
+    # --- NEW: State Machine Variables ---
+    state = "TRAINING"  # Can be "TRAINING" or "REPLAY"
+    winning_dna = None
+    replayer = None
+    
     running = True
     while running:
         # 1. Event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
-        # 2. Physics & Logic Update (Fast-Forward loop)
-        # 2. Physics & Logic Update
-        for _ in range(CYCLES_PER_FRAME):
-                    population.update(maze)
-                    
-                    if population.all_agents_dead():
-                        print(f"Generation {population.generation} finished.")
-                        
-                        # LA CORRECTION EST ICI : on passe juste 'maze'
-                        population.calculate_fitness_all(maze)
-                        population.natural_selection(maze.start_pos)
-        
-        # Clear the screen for the new frame
-        screen.fill(WHITE)
-        
-        # Render the environment (walls, start, target)
-        maze.draw(screen)
 
-        # Update and draw the population
-        population.update(maze)
-        population.draw(screen)
-        
-        # Check if the generation is over
-        if population.all_agents_dead():
-            print(f"Generation {population.generation} finished.")
+        if state == "TRAINING":
+            # --- TRAINING MODE ---
             
-            # Evolutionary process !
-            population.calculate_fitness_all(maze)
-            population.natural_selection(maze.start_pos)
-        
-        # Swap the buffers to display the new frame
-        pygame.display.flip()
-        
-        # Control the framerate
-        clock.tick(FPS)
+            # Do we draw this generation?
+            should_render = (population.generation % RENDER_EVERY_N_GEN == 0)
+            
+            # If we don't render, we remove the cycle limit and blast through calculations
+            cycles = CYCLES_PER_FRAME if should_render else 20
+            
+            for _ in range(cycles):
+                pygame.event.pump() 
 
-        
-        
-    # Clean up and exit
+                population.update(maze)
+                                
+                # Check if ANY agent reached the final target this frame!
+                for agent in population.agents:
+                    if agent.reached_target:
+                        print(f"VICTORY! Target reached at generation {population.generation}!")
+                        state = "REPLAY"
+                        winning_dna = agent.dna
+                        
+                        # Create our single replay entity
+                        replayer = Entity(maze.start_pos)
+                        replayer.dna = winning_dna
+                        break # Stop checking agents
+                        
+                if state == "REPLAY":
+                    break # Stop the fast-forward loop immediately
+                    
+                # Evolution step
+                if population.all_agents_dead():
+                    population.calculate_fitness_all(maze)
+                    population.natural_selection(maze.start_pos)
+            
+            # Render only if it's a designated rendering generation
+            if should_render:
+                screen.fill(WHITE)
+                maze.draw(screen)
+                population.draw(screen)
+                pygame.display.flip()
+                clock.tick(FPS)
+                
+        elif state == "REPLAY":
+            # --- REPLAY MODE ---
+            # Update at normal speed (1 cycle per frame) without fast-forward
+            replayer.update(maze)
+            
+            # If the replay finishes, restart it indefinitely to loop the victory
+            if replayer.dead or replayer.reached_target:
+                replayer = Entity(maze.start_pos)
+                replayer.dna = winning_dna
+            
+            # Always render the replay smoothly
+            screen.fill(WHITE)
+            maze.draw(screen)
+            replayer.draw(screen)
+            pygame.display.flip()
+            
+            # Cap the framerate to normal speed
+            clock.tick(FPS)
+
     pygame.quit()
     sys.exit()
 
