@@ -3,7 +3,7 @@ import sys
 from population import Population
 
 # Import our constants and classes
-from settings import WIDTH, HEIGHT, FPS, WHITE
+from settings import WIDTH, HEIGHT, FPS, WHITE, CYCLES_PER_FRAME
 from environment import Maze
 
 def main():
@@ -26,10 +26,22 @@ def main():
     # Main application loop
     running = True
     while running:
-        # Event handling (inputs, window closing)
+        # 1. Event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+        
+        # 2. Physics & Logic Update (Fast-Forward loop)
+        # 2. Physics & Logic Update
+        for _ in range(CYCLES_PER_FRAME):
+                    population.update(maze)
+                    
+                    if population.all_agents_dead():
+                        print(f"Generation {population.generation} finished.")
+                        
+                        # LA CORRECTION EST ICI : on passe juste 'maze'
+                        population.calculate_fitness_all(maze)
+                        population.natural_selection(maze.start_pos)
         
         # Clear the screen for the new frame
         screen.fill(WHITE)
@@ -46,7 +58,7 @@ def main():
             print(f"Generation {population.generation} finished.")
             
             # Evolutionary process !
-            population.calculate_fitness_all(maze.target_rect)
+            population.calculate_fitness_all(maze)
             population.natural_selection(maze.start_pos)
         
         # Swap the buffers to display the new frame

@@ -42,40 +42,79 @@ class Population:
         # If the loop finishes, everyone is dead or at the target
         return True
 
-    def calculate_fitness_all(self, target_rect):
+    def calculate_fitness(self, maze):
+        """
+        Calculates fitness based on how many checkpoints were reached, 
+        and the distance to the CURRENT objective.
+        """
+        # Massive base score for each checkpoint reached (ensures they never regress)
+        self.fitness = self.checkpoint_index * 1000  
+        
+        # Determine the next objective (the next checkpoint, or the final target)
+        if self.checkpoint_index < len(maze.checkpoints):
+            objective = maze.checkpoints[self.checkpoint_index]
+        else:
+            objective = maze.target_rect
+
+        if objective:
+            dx = self.pos.x - objective.centerx
+            dy = self.pos.y - objective.centery
+            distance = math.sqrt(dx**2 + dy**2)
+            
+            if distance == 0:
+                distance = 1
+                
+            self.fitness += 100.0 / distance
+            
+        if self.reached_target:
+            self.fitness *= 1000
+            
+        if self.dead and not self.reached_target:
+            self.fitness /= 2
+
+    def calculate_fitness_all(self, maze):
         """
         Calls the fitness calculation for every agent in the population.
         """
+        # The 'for' loop must be indented INSIDE the function (1 level right)
         for agent in self.agents:
-            agent.calculate_fitness(target_rect)
+            # The action must be indented INSIDE the 'for' loop (2 levels right)
+            agent.calculate_fitness(maze)
 
     def natural_selection(self, start_pos):
         """
-        Creates the next generation of agents based on the fitness of the current one.
+        Creates the next generation with Elitism: the best agent survives untouched.
         """
         new_agents = []
-        
-        # Extract the fitness of every agent to use as weights for the selection
         fitnesses = [agent.fitness for agent in self.agents]
         
-        for _ in range(len(self.agents)):
-            # Select two parents. random.choices picks based on the weights (fitness)
-            # The higher the fitness, the more likely they are to be chosen!
+        # --- ELITISM ---
+        # Find the index of the agent with the highest fitness
+        best_idx = fitnesses.index(max(fitnesses))
+        best_agent = self.agents[best_idx]
+        
+        # Clone the champion's DNA without mutating it
+        champion_dna = best_agent.dna.__class__(len(best_agent.dna.instructions)) # Or simply DNA(LIFESPAN) if imported
+        # Copy the instructions list explicitly to avoid referencing issues
+        champion_dna.instructions = list(best_agent.dna.instructions)
+        
+        champion = Entity(start_pos)
+        champion.dna = champion_dna
+        new_agents.append(champion)
+        
+        # --- REST OF THE POPULATION ---
+        # Generate the rest (-1 because the champion took 1 spot)
+        for _ in range(len(self.agents) - 1):
             parent_a = random.choices(self.agents, weights=fitnesses, k=1)[0]
             parent_b = random.choices(self.agents, weights=fitnesses, k=1)[0]
             
-            # Combine their DNA
             child_dna = parent_a.dna.crossover(parent_b.dna)
-            
-            # Mutate the child's DNA
             child_dna.mutate(MUTATION_RATE)
             
-            # Create a new entity with this new DNA
             child = Entity(start_pos)
             child.dna = child_dna
             
             new_agents.append(child)
             
-        # Replace the old population with the new generation
         self.agents = new_agents
         self.generation += 1

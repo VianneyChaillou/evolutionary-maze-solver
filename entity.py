@@ -18,6 +18,7 @@ class DNA:
                 force = force.normalize()
             
             self.instructions.append(force)
+            self.checkpoint_index = 0
 
 
     def crossover(self, partner_dna):
@@ -64,6 +65,8 @@ class Entity:
         
         self.dead = False
         self.reached_target = False
+
+        self.checkpoint_index = 0
         
         # Collision rectangle around the entity
         self.rect = pygame.Rect(self.pos.x - ENTITY_RADIUS, self.pos.y - ENTITY_RADIUS, 
@@ -103,7 +106,13 @@ class Entity:
         if self.rect.collidelist(maze.walls) != -1:
             self.dead = True
             
-        # Check if target is reached
+        # Check collision with current checkpoint
+        if self.checkpoint_index < len(maze.checkpoints):
+            current_cp = maze.checkpoints[self.checkpoint_index]
+            if self.rect.colliderect(current_cp):
+                self.checkpoint_index += 1 # Move to the next objective
+                
+        # Check if final target is reached
         if maze.target_rect and self.rect.colliderect(maze.target_rect):
             self.reached_target = True
 
@@ -116,27 +125,33 @@ class Entity:
         pygame.draw.circle(surface, color, (int(self.pos.x), int(self.pos.y)), ENTITY_RADIUS)
 
 
-    def calculate_fitness(self, target_rect):
+    def calculate_fitness(self, maze):
         """
-        Evaluates how well the entity performed.
-        Higher fitness is better. Based on distance to the target.
+        Calculates fitness based on how many checkpoints were reached, 
+        and the distance to the CURRENT objective.
         """
-        if target_rect:
-            # Calculate Euclidean distance from entity to target
-            dx = self.pos.x - target_rect.centerx
-            dy = self.pos.y - target_rect.centery
+        # Massive base score for each checkpoint reached (ensures they never regress)
+        self.fitness = self.checkpoint_index * 1000  
+        
+        # Determine the next objective (the next checkpoint, or the final target)
+        if self.checkpoint_index < len(maze.checkpoints):
+            objective = maze.checkpoints[self.checkpoint_index]
+        else:
+            objective = maze.target_rect
+
+        if objective:
+            # We use 'objective.centerx' now, NOT 'target_rect.centerx'
+            dx = self.pos.x - objective.centerx
+            dy = self.pos.y - objective.centery
             distance = math.sqrt(dx**2 + dy**2)
             
-            # Prevent division by zero if it's perfectly on the center
             if distance == 0:
                 distance = 1
                 
-            self.fitness = 1.0 / distance
+            self.fitness += 100.0 / distance
             
-            # Massive reward for actually reaching the target
-            if self.reached_target:
-                self.fitness *= 100
-                
-            # Optional punishment for hitting a wall (encourages survival)
-            if self.dead and not self.reached_target:
-                self.fitness /= 2
+        if self.reached_target:
+            self.fitness *= 1000
+            
+        if self.dead and not self.reached_target:
+            self.fitness /= 2
