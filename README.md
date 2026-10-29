@@ -35,14 +35,13 @@ Building a Machine Learning model from scratch in pure Python presented signific
 ## Evolution Stages
 
 ### 1. Generation 1: The Chaos
-![Gen 1 Chaos](<img width="1000" height="563" alt="gif1_first_population" src="https://github.com/user-attachments/assets/488886e8-659e-4df9-9f2d-64799c18f6a5" />)
+<img src="./gif/gif1_first_population.gif" alt="Gen 1 Chaos" width="800">
 
 ### 2. Mid-Training: Learning the Checkpoints
-![Mid Training](<img width="1000" height="563" alt="gif2_mid_training" src="https://github.com/user-attachments/assets/d7d26c8e-2c9d-4c42-b05e-f59971819e27" />)
+<img src="./gif/gif2_mid_training.gif" alt="Mid Training" width="800">
 
 ### 3. Final Victory: REPLAY Mode
-![Victory](<img width="1000" height="563" alt="gif3_victory_replay" src="https://github.com/user-attachments/assets/97e15b58-7cb7-4c63-980f-d23ea0194e03" />)
-
+<img src="./gif/gif3_victory_replay.gif" alt="Victory" width="800">
 
 ## Execution
 
